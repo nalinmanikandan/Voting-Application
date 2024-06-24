@@ -46,12 +46,9 @@ public class VoterController {
         try{
             v = voterServices.signIn(voter);
             return ResponseEntity.status(HttpStatus.OK).body(v);
-        }catch (WrongCredentialsException e){
+        }catch (WrongCredentialsException | VoterNotFoundException e){
             ErrorResponse err = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(), e.getMessage(),"/Voter/signin");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err);
-        }catch (VoterNotFoundException e){
-            ErrorResponse err = new ErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), e.getMessage(),"/Voter/signin");
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
         }
     }
 
@@ -79,12 +76,12 @@ public class VoterController {
             candidateServices.vote(voter, candidate);
             return new ResponseEntity<>("Successfully votes", HttpStatus.OK);
         }catch (CandidateNotFoundException | VoterNotFoundException e){
-            ErrorResponse err = new ErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), e.getMessage(),"/Voter/signin/"+uniqueId+"/vote/"+candidateId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+            ErrorResponse err = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(), e.getMessage(),"/Voter/signin/"+uniqueId+"/vote/"+candidateId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(err);
         }catch (AlreadyVoteDException e){
             ErrorResponse err = new ErrorResponse(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(), e.getMessage(),"/Voter/signin/"+uniqueId+"/vote/"+candidateId);
             return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
-        }catch (NotAllowedToVoteException e){
+        }catch (NotAllowedToVoteException | NoVotingForYourConstituency e){
             ErrorResponse err = new ErrorResponse(HttpStatus.FORBIDDEN.value(), HttpStatus.FORBIDDEN.getReasonPhrase(), e.getMessage(),"/Voter/signin/"+uniqueId+"/vote/"+candidateId);
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(err);
         }

@@ -75,8 +75,8 @@ public class AdminController {
             Candidate candid = candidateServices.updateCandidate(candidate, uniqueId);
             return new ResponseEntity<>(candid, HttpStatus.OK);
         }catch (CandidateNotFoundException e){
-            ErrorResponse err = new ErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), e.getMessage(),"Admin/update-candidate/"+uniqueId );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+            ErrorResponse err = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), e.getMessage(),"Admin/update-candidate/"+uniqueId );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }catch (SamePartyCandidateAlreadyExists e){
             ErrorResponse err = new ErrorResponse(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(),e.getMessage(), "Admin/update-candidate/"+uniqueId );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
@@ -89,8 +89,8 @@ public class AdminController {
             candidateServices.deleteCandidate(uniqueId);
             return new ResponseEntity<>("Candidate with Id "+uniqueId+" have been deleted",HttpStatus.OK);
         }catch (CandidateNotFoundException e){
-            ErrorResponse err = new ErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), e.getMessage(),"/delete-candidate/"+uniqueId );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+            ErrorResponse err = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), e.getMessage(),"Admin/update-candidate/"+uniqueId );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
     }
 

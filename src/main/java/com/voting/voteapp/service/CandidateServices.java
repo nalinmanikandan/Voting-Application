@@ -26,6 +26,7 @@ public class CandidateServices {
     private VotersRepository votersRepository;
 
     List<Candidate> winners = new ArrayList<>();
+    List<String> singleCandidateDistricts = new ArrayList<>();
 
     public Candidate addCandidate(AddCandidateDto candidate){
         Candidate candidateNew = new Candidate();
@@ -78,7 +79,7 @@ public class CandidateServices {
     }
 
     public void vote(Voter voter, Candidate candidate) {
-        if(adminRepository.findAll().get(0).getElectionStatus() && voter.getDistrict().equals(candidate.getCandidateDistrict()) && !winners.contains(candidate)){
+        if(adminRepository.findAll().get(0).getElectionStatus() && voter.getDistrict().equals(candidate.getCandidateDistrict()) && !singleCandidateDistricts.contains(candidate.getCandidateDistrict())){
             if((voter.getVoteCount()>0)){
                 candidate.setCandidatesVote(candidate.getCandidatesVote()+1);
                 voter.setVoteCount(voter.getVoteCount()-1);
@@ -173,18 +174,18 @@ public class CandidateServices {
         return result;
     }*/
 
-    public ResultDto getResults(){
+    /*public ResultDto getResults(){
+        Admin admin = adminRepository.findByUsername("ECI-Admin36");
+        if (!admin.isElectionCompleted()){
+            throw new ElectionNotCompletedException("Elections are Not Completed Yet");
+        }
         String winningParty = "Re-Election";
-        int count=0;
-        List<String> winningPartiesList = new ArrayList<>();
         List<Candidate> candidates = candidateRepository.findAll();
         HashMap<String, Candidate> districtWiseWinners = new HashMap<>();
         HashMap<String, Integer> stateWiseWinners = new HashMap<>();
         Set<String> districtsWithEqualHighVotes = new LinkedHashSet<>();
         for (Candidate candidate : candidates) {
-            if (!stateWiseWinners.containsKey(candidate.getParty())){
-                stateWiseWinners.put(candidate.getParty(), 0);
-            }
+            stateWiseWinners.putIfAbsent(candidate.getParty(), 0);
             if (!districtWiseWinners.containsKey(candidate.getCandidateDistrict())) {
                 districtWiseWinners.put(candidate.getCandidateDistrict(), candidate);
                 stateWiseWinners.put(candidate.getParty(), stateWiseWinners.get(candidate.getParty())+1);
@@ -206,9 +207,61 @@ public class CandidateServices {
                     districtsWithEqualHighVotes.add(existingCandidate.getCandidateDistrict());
                 }
             }
-
         }
         winningParty = OverallStateWinningParty(stateWiseWinners);
+        for (String district : districtsWithEqualHighVotes){
+            districtWiseWinners.remove(district);
+        }
+        return new ResultDto(winningParty, stateWiseWinners, districtWiseWinners);
+    }*/
+
+    public ResultDto getResults(){
+        Admin admin = adminRepository.findByUsername("ECI-Admin36");
+        if (!admin.isElectionCompleted()){
+            throw new ElectionNotCompletedException("Elections are Not Completed Yet");
+        }
+        int count=0;
+        String winningParty = "Re-Election";
+        List<Candidate> candidates = candidateRepository.findAll();
+        HashMap<String, Candidate> districtWiseWinners = new HashMap<>();
+        HashMap<String, Integer> stateWiseWinners = new HashMap<>();
+        Set<String> districtsWithEqualHighVotes = new LinkedHashSet<>();
+        for (Candidate candidate : candidates) {
+            stateWiseWinners.putIfAbsent(candidate.getParty(), 0);
+            if (!districtWiseWinners.containsKey(candidate.getCandidateDistrict())) {
+                districtWiseWinners.put(candidate.getCandidateDistrict(), candidate);
+                stateWiseWinners.put(candidate.getParty(), stateWiseWinners.get(candidate.getParty())+1);
+            } else {
+                Candidate existingCandidate = districtWiseWinners.get(candidate.getCandidateDistrict());
+                if (existingCandidate.getCandidatesVote() < candidate.getCandidatesVote()) {
+                    if (stateWiseWinners.get(existingCandidate.getParty())>0 && !districtsWithEqualHighVotes.contains(candidate.getCandidateDistrict())){
+                        stateWiseWinners.put(existingCandidate.getParty(), stateWiseWinners.get(existingCandidate.getParty())-1);
+                    }
+                    districtWiseWinners.put(candidate.getCandidateDistrict(), candidate);
+                    stateWiseWinners.put(candidate.getParty(), stateWiseWinners.get(candidate.getParty())+1);
+                    if (districtsWithEqualHighVotes.contains(candidate.getCandidateDistrict())) {
+                        districtsWithEqualHighVotes.remove(candidate.getCandidateDistrict());
+                    }
+                } else if (existingCandidate.getCandidatesVote() == candidate.getCandidatesVote()) {
+                    if(stateWiseWinners.get(existingCandidate.getParty())>0){
+                        stateWiseWinners.put(existingCandidate.getParty(), stateWiseWinners.get(existingCandidate.getParty())-1);
+                    }
+                    districtsWithEqualHighVotes.add(existingCandidate.getCandidateDistrict());
+                }
+            }
+            if (!candidate.getParty().equals("Independent")){
+                if(stateWiseWinners.containsKey(winningParty) && stateWiseWinners.get(winningParty)<count){
+                    count=stateWiseWinners.get(winningParty);
+                }
+                if(stateWiseWinners.get(candidate.getParty())>count){
+                    count = stateWiseWinners.get(candidate.getParty());
+                    winningParty = candidate.getParty();
+                }else if (stateWiseWinners.get(candidate.getParty())==count && !candidate.getParty().equals(winningParty)){
+                    winningParty = "Re-election";
+                }
+            }
+        }
+        if (count==1) winningParty = "Re-election";
         for (String district : districtsWithEqualHighVotes){
             districtWiseWinners.remove(district);
         }
@@ -258,38 +311,9 @@ public class CandidateServices {
         for (Candidate candidate : candidatesList){
             if (totalCandidatesInDistrict.get(candidate.getCandidateDistrict())==1){
                 winners.add(candidate);
+                singleCandidateDistricts.add(candidate.getCandidateDistrict());
             }
         }
     }
 
 }
-
-
-
-
-/*for (Candidate candidate : existingCandidates) {
-            if (!districts.containsKey(candidate.getCandidateDistrict())) {
-                int count = candidate.getCandidatesVote();
-                districts.put(candidate.getCandidateDistrict(), count);
-                NoCandidistricts.put(candidate.getCandidateDistrict(),1);
-            } else {
-                int count = candidate.getCandidatesVote();
-                if (count > districts.get(candidate.getCandidateDistrict())) {
-                    districts.put(candidate.getCandidateDistrict(), count);
-                }else if(count==districts.get(candidate.getCandidatesVote())){
-
-                }
-                NoCandidistricts.put(candidate.getCandidateDistrict(),NoCandidistricts.get(candidate.getCandidateDistrict())+1);
-            }
-        }
-        List<Candidate> result = new ArrayList<>();
-        for (Candidate existingCandidate : existingCandidates) {
-            String district = existingCandidate.getCandidateDistrict();
-            int count = existingCandidate.getCandidatesVote();
-            if(NoCandidistricts.containsKey(existingCandidate.getCandidateDistrict()) && NoCandidistricts.get(existingCandidate.getCandidateDistrict())==1){
-                result.add(existingCandidate);
-            }else if (districts.containsKey(district) && count == districts.get(district)) {
-                result.add(existingCandidate);
-            }
-        }
-        return result;*/
