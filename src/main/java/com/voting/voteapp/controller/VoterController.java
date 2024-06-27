@@ -88,16 +88,16 @@ public class VoterController {
 
     }
 
-    @GetMapping("/getResult")
+    /*@GetMapping("/getResult")
     public ResponseEntity<?> getResult(){
         ResultDto result;
         try{
             result = candidateServices.getResults();
         }catch (ElectionNotCompletedException e){
-            ErrorResponse err = new ErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), e.getMessage(),"Admin/getResult" );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+            ErrorResponse err = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), e.getMessage(),"Admin/getResult" );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
         return new ResponseEntity<>(result,HttpStatus.OK);
-    }
+    }*/
 
 }

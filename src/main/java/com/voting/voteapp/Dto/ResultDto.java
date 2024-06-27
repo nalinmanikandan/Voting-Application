@@ -1,6 +1,7 @@
 package com.voting.voteapp.Dto;
 
 import com.voting.voteapp.entity.Candidate;
+import com.voting.voteapp.entity.PartyVoteCount;
 
 import java.util.HashMap;
 import java.util.List;
@@ -9,12 +10,9 @@ public class ResultDto {
 
     private String winningParty;
 
-    private HashMap<String ,Integer> StateWiseWinners;
+    private HashMap<String , PartyVoteCount> DistrictWiseWinners;
 
-    private HashMap<String , Candidate> DistrictWiseWinners;
-
-    public ResultDto(String winningParty, HashMap<String ,Integer> StateWiseWinners, HashMap<String, Candidate> districtWiseWinners) {
-        this.StateWiseWinners = StateWiseWinners;
+    public ResultDto(String winningParty, HashMap<String, PartyVoteCount> districtWiseWinners) {
         this.DistrictWiseWinners = districtWiseWinners;
         this.winningParty=winningParty;
     }
@@ -27,19 +25,11 @@ public class ResultDto {
         this.winningParty = winningParty;
     }
 
-    public HashMap<String, Candidate> getDistrictWiseWinners() {
+    public HashMap<String, PartyVoteCount> getDistrictWiseWinners() {
         return DistrictWiseWinners;
     }
 
-    public void setDistrictWiseWinners(HashMap<String, Candidate> districtWiseWinners) {
+    public void setDistrictWiseWinners(HashMap<String, PartyVoteCount> districtWiseWinners) {
         DistrictWiseWinners = districtWiseWinners;
-    }
-
-    public HashMap<String, Integer> getStateWiseWinners() {
-        return StateWiseWinners;
-    }
-
-    public void setStateWiseWinners(HashMap<String, Integer> stateWiseWinners) {
-        StateWiseWinners = stateWiseWinners;
     }
 }

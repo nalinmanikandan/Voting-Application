@@ -6,6 +6,7 @@ import com.voting.voteapp.Dto.UserDto;
 import com.voting.voteapp.Exceptions.*;
 import com.voting.voteapp.entity.Admin;
 import com.voting.voteapp.entity.Candidate;
+import com.voting.voteapp.entity.PartyVoteCount;
 import com.voting.voteapp.entity.Voter;
 import com.voting.voteapp.service.AdminServices;
 import com.voting.voteapp.service.CandidateServices;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -123,8 +125,8 @@ public class AdminController {
         try{
             result = candidateServices.getResults();
         }catch (ElectionNotCompletedException e){
-            ErrorResponse err = new ErrorResponse(HttpStatus.NOT_FOUND.value(), HttpStatus.NOT_FOUND.getReasonPhrase(), e.getMessage(),"Admin/getResult" );
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(err);
+            ErrorResponse err = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(), e.getMessage(),"Admin/getResult" );
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(err);
         }
         return new ResponseEntity<>(result,HttpStatus.OK);
     }
