@@ -4,10 +4,7 @@ import com.voting.voteapp.Dto.ResultDto;
 import com.voting.voteapp.Dto.UpdateCandidateDto;
 import com.voting.voteapp.Dto.UserDto;
 import com.voting.voteapp.Exceptions.*;
-import com.voting.voteapp.entity.Admin;
-import com.voting.voteapp.entity.Candidate;
-import com.voting.voteapp.entity.PartyVoteCount;
-import com.voting.voteapp.entity.Voter;
+import com.voting.voteapp.entity.*;
 import com.voting.voteapp.service.AdminServices;
 import com.voting.voteapp.service.CandidateServices;
 import com.voting.voteapp.service.VoterServices;
@@ -17,7 +14,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -100,7 +96,7 @@ public class AdminController {
     public ResponseEntity<?> startElection(){
         try{
             adminServices.startElection();
-            candidateServices.removeSingleCandDistrict();
+            voterServices.removeSingleCandDistrict();
         }catch (ElectionAlreadyStartedException e){
             ErrorResponse err = new ErrorResponse(HttpStatus.CONFLICT.value(), HttpStatus.CONFLICT.getReasonPhrase(), e.getMessage(),"Admin/start" );
             return ResponseEntity.status(HttpStatus.CONFLICT).body(err);
@@ -142,5 +138,7 @@ public class AdminController {
         List<Voter> exisitingVoter = voterServices.resetVV();
         return new ResponseEntity<>(exisitingVoter, HttpStatus.OK);
     }
+
+
 
 }

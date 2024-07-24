@@ -1,5 +1,4 @@
 package com.voting.voteapp.controller;
-import com.voting.voteapp.Dto.ResultDto;
 import com.voting.voteapp.Dto.VoterDto;
 import com.voting.voteapp.Dto.voterSignInDto;
 import com.voting.voteapp.Exceptions.*;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @RestController
 @RequestMapping("/voter")
@@ -73,7 +71,8 @@ public class VoterController {
         try{
             Candidate candidate = candidateServices.getCandidate(candidateId);
             Voter voter = voterServices.getVoter(uniqueId);
-            candidateServices.vote(voter, candidate);
+            voterServices.vote(voter, candidate);
+            //voterVoteRecordServices.setVoteRecord(voter, candidate);
             return new ResponseEntity<>("Successfully votes", HttpStatus.OK);
         }catch (CandidateNotFoundException | VoterNotFoundException e){
             ErrorResponse err = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), HttpStatus.UNAUTHORIZED.getReasonPhrase(), e.getMessage(),"/Voter/signin/"+uniqueId+"/vote/"+candidateId);

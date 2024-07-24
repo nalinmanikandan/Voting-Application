@@ -2,28 +2,29 @@ package com.voting.voteapp.service;
 
 import com.voting.voteapp.Dto.VoterDto;
 import com.voting.voteapp.Dto.voterSignInDto;
-import com.voting.voteapp.Exceptions.LowerAgeException;
-import com.voting.voteapp.Exceptions.VoterAlreadyExistsException;
-import com.voting.voteapp.Exceptions.VoterNotFoundException;
-import com.voting.voteapp.Exceptions.WrongCredentialsException;
+import com.voting.voteapp.Exceptions.*;
 import com.voting.voteapp.entity.Admin;
+import com.voting.voteapp.entity.Candidate;
 import com.voting.voteapp.entity.Voter;
 import com.voting.voteapp.repository.AdminRepository;
+import com.voting.voteapp.repository.CandidateRepository;
 import com.voting.voteapp.repository.VotersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class VoterServices {
 
     @Autowired
     VotersRepository votersRepository;
-
+    @Autowired
+    CandidateRepository candidateRepository;
     @Autowired
     AdminRepository adminRepository;
+
+    List<String> singleCandidateDistricts = new ArrayList<>();
 
     public Voter signUp(VoterDto voter) {
         Optional<Voter> existingVoter = votersRepository.findByUniqueId(voter.getUniqueId());
@@ -59,6 +60,23 @@ public class VoterServices {
         return admin.getElectionStatus();
     }
 
+    public void removeSingleCandDistrict(){
+        HashMap<String, Integer> totalCandidatesInDistrict = new HashMap<>();
+        List<Candidate> candidatesList = candidateRepository.findAll();
+        for (Candidate candidate : candidatesList){
+            if(!totalCandidatesInDistrict.containsKey(candidate.getCandidateDistrict())){
+                totalCandidatesInDistrict.put(candidate.getCandidateDistrict(), 1);
+            }else{
+                totalCandidatesInDistrict.put(candidate.getCandidateDistrict(), totalCandidatesInDistrict.get(candidate.getCandidateDistrict())+1);
+            }
+        }
+        for (Candidate candidate : candidatesList){
+            if (totalCandidatesInDistrict.get(candidate.getCandidateDistrict())==1){
+                singleCandidateDistricts.add(candidate.getCandidateDistrict());
+            }
+        }
+    }
+
     public String findDistrict(long uniqueId){
         Voter voter = votersRepository.findByUniqueId(uniqueId).get();
         return voter.getDistrict();
@@ -81,6 +99,54 @@ public class VoterServices {
             votersRepository.save(v);
         }
         return voters;
+    }
+
+    public void vote(Voter voter, Candidate candidate) {
+        if(adminRepository.findAll().get(0).getElectionStatus() && voter.getDistrict().equals(candidate.getCandidateDistrict()) && !singleCandidateDistricts.contains(candidate.getCandidateDistrict())){
+            if((voter.getVoteCount()>0)){
+                candidate.setCandidatesVote(candidate.getCandidatesVote()+1);
+                voter.setVoteCount(voter.getVoteCount()-1);
+                setVoteRecord(voter,candidate);
+                votersRepository.save(voter);
+                candidateRepository.save(candidate);
+            }else{
+                voter.setVoted(true);
+                votersRepository.save(voter);
+                throw new AlreadyVoteDException("Already Voted");
+            }
+        }else{
+            throw new NotAllowedToVoteException("Not allowed to vote");
+        }
+    }
+
+    public void setVoteRecord(Voter voter, Candidate candidate){
+        Map<String, Integer> voterVotedPartyRecord = voter.getVotedPartiesList();
+        voterVotedPartyRecord.put(
+                candidate.getParty(),
+                voterVotedPartyRecord.getOrDefault(candidate.getParty(),0)+1
+        );
+        voter.setVotedPartiesList(voterVotedPartyRecord);
+        votersRepository.save(voter);
+    }
+
+    public String checkWinnerByLowestAvgAge(String existingParty, String currentParty, String district){
+        List<Voter> existingPartyVotedList = votersRepository.findByDistrictAndParty(district, existingParty);
+        List<Voter> currentPartyVotedList = votersRepository.findByDistrictAndParty(district, currentParty);
+        float avgAgeOfVotersExistingParty = findAverageAge(existingPartyVotedList);
+        float avgAgeOfVotersCurrentParty = findAverageAge(currentPartyVotedList);
+        if (avgAgeOfVotersExistingParty>avgAgeOfVotersCurrentParty){
+            return currentParty;
+        }else{
+            return existingParty;
+        }
+    }
+
+    public float findAverageAge(List<Voter> votedRecords){
+        int sumOfAllAges = 0;
+        for (Voter voterVoteRecord : votedRecords){
+            sumOfAllAges = sumOfAllAges + voterVoteRecord.getAge();
+        }
+        return (float) sumOfAllAges/votedRecords.size();
     }
 
 }

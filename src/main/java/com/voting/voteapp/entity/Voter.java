@@ -1,6 +1,7 @@
 package com.voting.voteapp.entity;
-
 import jakarta.persistence.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Table(name = "Voters")
@@ -26,6 +27,20 @@ public class Voter {
 
     @Column(name = "voteCount", nullable = false)
     private int voteCount = 4;
+
+    @ElementCollection
+    @CollectionTable(name = "voter_votes_map", joinColumns = @JoinColumn(name = "voter_id"))
+    @MapKeyColumn(name = "party_name")
+    @Column(name = "votes")
+    private Map<String, Integer> votedPartiesList = new HashMap<>();
+
+    public Map<String, Integer> getVotedPartiesList() {
+        return votedPartiesList;
+    }
+
+    public void setVotedPartiesList(Map<String, Integer> votedPartiesList) {
+        this.votedPartiesList = votedPartiesList;
+    }
 
     public boolean isVoted() {
         return isVoted;
